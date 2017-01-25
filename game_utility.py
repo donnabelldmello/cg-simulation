@@ -14,24 +14,21 @@ class game_utility():
 
 	@staticmethod
 	def normalize(data, length):
-		return data / length;
+		return data/length;
 
 	@staticmethod
 	def denormalize(data, length):
-		return int(round(data * length));
+		return int(data * length);
 
 	@staticmethod
 	def renderSimulation(d, t, fSchedule, pSchedule, target, dst, activePatrollers, showLegend, attackTime):
-		attackTime = attackTime - 1 #for indexing subtract 1
-		#xaxis = np.array([[x * 0.1 for x in range(t)] for y in range(len(fSchedule))])
-		xaxis = np.array([x * 0.1 for x in range(t)])
-
+		attackTime = attackTime - 1#for indexing subtract 1
+		xaxis = np.array([1.0*(x)/(t-1) for x in range(t)])
 		attack_ferry = target[0]
-		#attackTime = game_utility.denormalize(target[1], t)
 		legendArr = []
 
 		#Attack & attacked ferry plot
-		plt.plot([attackTime * 0.1], [fSchedule[attack_ferry][attackTime]], 'ro')
+		plt.plot([target[1]], [fSchedule[attack_ferry][attackTime]], 'ro')
 		legendArr.append("Attack")
 
 		plt.plot(xaxis, fSchedule[attack_ferry], '--')
@@ -49,7 +46,7 @@ class game_utility():
 			legendArr.append("Patroller" + format(p))
 
 		for activeP in range(len(activePatrollers)):
-			plt.plot([attackTime * 0.1], [pSchedule[activeP][attackTime]], 'gs')
+			plt.plot([target[1]], [pSchedule[activeP][attackTime]], 'gs')
 			legendArr.append("Active patrollers")
 
 		if(showLegend):
