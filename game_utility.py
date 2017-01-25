@@ -28,9 +28,9 @@ class game_utility():
 		offset = attackTime - int(attackTime) # 17.5 - 17.0 = 0.5
 		attackPosition = first
 
-		print("first", first)
-		print("offset", offset)
-		print("attackPosition", attackPosition)
+		#print("first", first)
+		#print("offset", offset)
+		#print("attackPosition", attackPosition)
 
 		if (int(attackTime) < len(fSchedule[0]) - 1):
 			psecond = int(attackTime) + 1
@@ -40,20 +40,20 @@ class game_utility():
 			diff = second - first # 1.0 - 0.83 = 0.17
 
 			attackPosition = attackPosition + (diff * offset)
-			print("second", second)
-			print("diff", diff)
+			#print("second", second)
+			#print("diff", diff)
 
-			print("psecond", psecond)	
-			print("pfirst", pfirst)
+			#print("psecond", psecond)	
+			#print("pfirst", pfirst)
 
 			attackPosition = ((second - first) * (psecond - targetAttackTime))/(psecond - pfirst)
-			print("attackPosition", attackPosition)
+			#print("attackPosition", attackPosition)
 
 			if(attackPosition < 0):
 				attackPosition = first - (((first - second) * (pfirst - targetAttackTime))/(pfirst - psecond))
 			else:
 				attackPosition = second - attackPosition
-			print("attackPosition", attackPosition)
+			#print("attackPosition", attackPosition)
 			return attackPosition
 
 	@staticmethod

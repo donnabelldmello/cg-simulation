@@ -131,7 +131,7 @@ class game_simulator(object):
 		for pIndex, pItem in enumerate(pSchedule):
 			patroller_ferry_dist = abs(pSchedule[pIndex][attackTime] - targetPosition)
 			if (patroller_ferry_dist <= self.p_radius):
-				print("dist: ", patroller_ferry_dist)
+				print("patroller_ferry_dist: ", patroller_ferry_dist)
 				print("radius: ", p_radius)
 				print("Patroller position: %f" %  pSchedule[pIndex][attackTime])
 				print("Target position: %f" % targetPosition)
@@ -160,7 +160,7 @@ class game_simulator(object):
 			patrollerY = game_utility.calculateLocation(pIndex, pSchedule, attackTimeStmp, target[1])
 
 			dist_from_attack = distance.euclidean([targetX, targetY], [patrollerX, patrollerY])
-			print("dist: ", dist_from_attack)
+			print("Patroller ferry dist: ", dist_from_attack)
 			print("radius: ", p_radius)
 			print("Patroller position: %f, %f" %  (patrollerX, patrollerY))
 			print("Target position: %f , %f" % (targetX, targetY))
@@ -168,9 +168,8 @@ class game_simulator(object):
 			if (dist_from_attack <= self.p_radius):
 				unsuccessfulProbability = unsuccessfulProbability + self.patroller_probability_vector[pIndex]
 				activePatrollers.append(pIndex)
-				print("FAILED")
+				print("ATTACK FAILED")
 
-		print(target[1], attackTime)
 		if(unsuccessfulProbability > 0):
 			return (+1, -1), unsuccessfulProbability, activePatrollers, attackTimeStmp, targetPosition
 		else:
