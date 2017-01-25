@@ -9,7 +9,7 @@ no_of_ferries = 2
 no_of_discrete_time_intervals = 35
 maximam_velocity_vector = [1, 2]
 port_coordinates_vector = [[0,0],[0,8]]
-no_of_trips_vector = [3,2]
+no_of_trips_vector = [3,7]
 halt_time_at_port = 0
 buffer_before_start = 0
 
@@ -21,7 +21,7 @@ patroller_probability_vector = [0.7]
 showLegend = False
 ##############  CALCULATED INPUT  ##############
 pSchedule = np.array([[0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0,  0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0]])
-target = [0, 0.43]
+target = [0, 0.63]
 ################################################
 
 
@@ -50,7 +50,7 @@ class game_simulator(object):
 
 		for fIndex,fItem in enumerate(schedule):
 			forwardDirection = True
-			tripNo = 0
+			tripNo = 1
 			for tIndex, tItem in enumerate(fItem):
 				position = (vmax[fIndex] * ((timeStep * tIndex) + startTime[fIndex]))
 				rangeStart = game_utility.findRangeStart(position, dst)
@@ -58,22 +58,25 @@ class game_simulator(object):
 					# RETURNING FERRY
 					position = dst - (position - rangeStart)
 					if(forwardDirection):
-						tripNo = tripNo + 1
+						#tripNo = tripNo + 1
 						forwardDirection = False
-					#print("return", position)
+						print("return", position)
 				elif (position > dst and (rangeStart/dst)%2 == 0):
 					# MOVING FORWARD FERRY
 					position = position - rangeStart;
-					#print("forward", position)
 					if(not forwardDirection):
 						tripNo = tripNo + 1
 						forwardDirection = True
+						print("forward", position)
 				#print(format(max(game_utility.normalize(position, dst), 0.0), '.2f'))
 				#print(rangeStart)
-				if(tripNo > trips[fIndex] + 1):        ######################## TODO : Number  of trips
+				if(tripNo > trips[fIndex]):        ######################## TODO : Number  of trips
 					position = 0
 				schedule[fIndex][tIndex] = format(max(game_utility.normalize(position, dst), 0.0), '.2f')
-				#print(fIndex, tripNo, trips[fIndex], position)
+				
+
+
+				print(fIndex, tripNo, trips[fIndex], position)
 
 		return schedule
 	
