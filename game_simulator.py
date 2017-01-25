@@ -14,7 +14,7 @@ halt_time_at_port = 0
 buffer_before_start = 0
 
 render = False
-p_radius = 0.2
+p_radius = 0.21
 no_of_patrollers = 1
 patroller_probability_vector = [0.7]
 
@@ -120,7 +120,7 @@ class game_simulator(object):
 		schedule = self.getLinearSchedule(schedule, timeStep, startTime, dst)		
 		return schedule, timeStep;
 
-	def runGame(self, fSchedule, pSchedule, target):
+	def runGameOld(self, fSchedule, pSchedule, target):
 		activePatrollers = []
 		render = self.render
 		unsuccessfulProbability = 0
@@ -137,6 +137,38 @@ class game_simulator(object):
 				print("Target position: %f" % targetPosition)
 				unsuccessfulProbability = unsuccessfulProbability + self.patroller_probability_vector[pIndex]
 				activePatrollers.append(pIndex)
+
+		print(target[1], attackTime)
+		if(unsuccessfulProbability > 0):
+			return (+1, -1), unsuccessfulProbability, activePatrollers, attackTimeStmp, targetPosition
+		else:
+			return (-1, +1),0, [], attackTimeStmp, targetPosition
+
+
+	def runGame(self, fSchedule, pSchedule, target):
+		activePatrollers = []
+		render = self.render
+		unsuccessfulProbability = 0
+		attackTimeStmp = game_utility.denormalize(target[1], self.no_of_discrete_time_intervals-1)
+		attackTime = int(attackTimeStmp)
+		targetX = target[1]
+		targetY = game_utility.calculateLocation(target[0], fSchedule, attackTimeStmp, target[1])
+		targetPosition = fSchedule[target[0]][attackTime]
+		
+		for pIndex, pItem in enumerate(pSchedule):
+			patrollerX = target[1]
+			patrollerY = game_utility.calculateLocation(pIndex, pSchedule, attackTimeStmp, target[1])
+
+			dist_from_attack = distance.euclidean([targetX, targetY], [patrollerX, patrollerY])
+			print("dist: ", dist_from_attack)
+			print("radius: ", p_radius)
+			print("Patroller position: %f, %f" %  (patrollerX, patrollerY))
+			print("Target position: %f , %f" % (targetX, targetY))
+
+			if (dist_from_attack <= self.p_radius):
+				unsuccessfulProbability = unsuccessfulProbability + self.patroller_probability_vector[pIndex]
+				activePatrollers.append(pIndex)
+				print("FAILED")
 
 		print(target[1], attackTime)
 		if(unsuccessfulProbability > 0):
