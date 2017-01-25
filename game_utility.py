@@ -13,21 +13,21 @@ class game_utility():
 		return distance - dst;
 
 	@staticmethod
-	def normalize(data, startData, length):
+	def normalize(data, length):
 		return data / length;
 
 	@staticmethod
 	def denormalize(data, length):
-		return int(data * length);
+		return int(round(data * length));
 
 	@staticmethod
-	def renderSimulation(d, t, fSchedule, pSchedule, target, dst, activePatrollers, showLegend):
-		i = 0
+	def renderSimulation(d, t, fSchedule, pSchedule, target, dst, activePatrollers, showLegend, attackTime):
+		attackTime = attackTime - 1 #for indexing subtract 1
 		#xaxis = np.array([[x * 0.1 for x in range(t)] for y in range(len(fSchedule))])
 		xaxis = np.array([x * 0.1 for x in range(t)])
 
 		attack_ferry = target[0]
-		attackTime = game_utility.denormalize(target[1], dst)
+		#attackTime = game_utility.denormalize(target[1], t)
 		legendArr = []
 
 		#Attack & attacked ferry plot

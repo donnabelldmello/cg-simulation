@@ -6,12 +6,12 @@ from game_utility import *
 
 ################ CONFIGURED INPUT ##############
 no_of_ferries = 2
-no_of_discrete_time_intervals = 16
-maximam_velocity_vector = [1, 2]
+no_of_discrete_time_intervals = 9
+maximam_velocity_vector = [1, 1]
 port_coordinates_vector = [[0,0],[0,8]]
 no_of_trips_vector = [2,2]
 halt_time_at_port = 0
-buffer_before_start = 0
+buffer_before_start = 2
 
 render = False
 p_radius = 0.2
@@ -20,7 +20,7 @@ patroller_probability_vector = [0.7]
 
 showLegend = False
 ##############  CALCULATED INPUT  ##############
-pSchedule = np.array([[0.3, 0.5, 0.8, 0.7, 0.6, 0.5, 0.4, 0.4, 0.2, 0.3, 0.4, 0.5, 0.5, 0.5, 0.6, 0.8]])
+pSchedule = np.array([[0.3, 0.5, 0.8, 0.7, 0.6, 0.5, 0.4, 0.4, 0.2]])
 target = [0, 0.4]
 ################################################
 
@@ -50,7 +50,7 @@ class game_simulator(object):
 
 		for fIndex,fItem in enumerate(schedule):
 				for tIndex, tItem in enumerate(schedule[fIndex]):
-					position = (vmax[fIndex] * timeStep * (tIndex)) - startTime[fIndex]
+					position = (vmax[fIndex] * timeStep * tIndex) - startTime[fIndex]
 					rangeStart = game_utility.findRangeStart(position, dst)
 					if((rangeStart/dst) > trips[fIndex] + 1):
 						position = 0
@@ -62,7 +62,11 @@ class game_simulator(object):
 						elif (position > dst and (rangeStart/dst)%2 == 0):
 							# MOVING FORWARD FERRY
 							position = position - rangeStart;
-					schedule[fIndex][tIndex] = format(max(game_utility.normalize(position, rangeStart+1, dst), 0.0), '.2f')
+					#print("tindex:", tIndex)
+					#print("position: ", position)
+					schedule[fIndex][tIndex] = format(max(game_utility.normalize(position, dst), 0.0), '.2f')
+					#print("position: ", schedule[fIndex][tIndex])
+
 					#schedule[fIndex][tIndex] = format(max(position, 0), '.2f')
 
 		return schedule
@@ -114,19 +118,26 @@ class game_simulator(object):
 		activePatrollers = []
 		render = self.render
 		unsuccessfulProbability = 0
-		attackTimeStmp = game_utility.denormalize(target[1], self.dst)
+		attackTimeStmp = game_utility.denormalize(target[1], self.no_of_discrete_time_intervals)
+		print(attackTimeStmp)
 		targetPosition = fSchedule[target[0]][game_utility.denormalize(target[1], self.dst)]
+		
 		for pIndex, pItem in enumerate(pSchedule):
-			if (abs(pSchedule[pIndex][attackTimeStmp] - targetPosition) <= self.p_radius):
+			patroller_ferry_dist = abs(pSchedule[pIndex][attackTimeStmp] - targetPosition)
+			if (patroller_ferry_dist <= self.p_radius):
+				print("dist: ", patroller_ferry_dist)
+				print("radius: ", p_radius)
 				print("Patroller position: %f" %  pSchedule[pIndex][attackTimeStmp])
 				print("Target position: %f" % targetPosition)
 				unsuccessfulProbability = unsuccessfulProbability + self.patroller_probability_vector[pIndex]
 				activePatrollers.append(pIndex)
 
 		if(unsuccessfulProbability > 0):
-			return (+1, -1), unsuccessfulProbability, activePatrollers
+			return (+1, -1), unsuccessfulProbability, activePatrollers, attackTimeStmp
 		else:
-			return (-1, +1)
+			return (-1, +1),0, [], attackTimeStmp
+
+
 
 print("No of ferries (f): %d" % no_of_ferries)
 print("Discrete time intervals (t): %d" % no_of_discrete_time_intervals)
@@ -145,11 +156,11 @@ print('\n'.join(['\t'.join(['{:4}'.format(item) for item in row]) for row in fSc
 print("\nTarget: ")
 print(','.join(['{:4}'.format(item) for item in target]))
 
-reward, prob, activePatrollers = simulator.runGame(fSchedule, pSchedule, target)
+reward, prob, activePatrollers, attackTimeStmp = simulator.runGame(fSchedule, pSchedule, target)
 print("Reward: %s" % format(reward))
 print("Unsuccessful probability: %s" % format(prob))
 print("Active Patrollers: %s" % format(activePatrollers))
 
-game_utility.renderSimulation(8, no_of_discrete_time_intervals, fSchedule, pSchedule, target, simulator.dst, activePatrollers, showLegend)
+game_utility.renderSimulation(8, no_of_discrete_time_intervals, fSchedule, pSchedule, target, simulator.dst, activePatrollers, showLegend, attackTimeStmp)
 
 	
