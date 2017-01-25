@@ -6,10 +6,10 @@ from game_utility import *
 
 ################ CONFIGURED INPUT ##############
 no_of_ferries = 2
-no_of_discrete_time_intervals = 30
+no_of_discrete_time_intervals = 35
 maximam_velocity_vector = [1, 2]
 port_coordinates_vector = [[0,0],[0,8]]
-no_of_trips_vector = [2,2]
+no_of_trips_vector = [3,2]
 halt_time_at_port = 0
 buffer_before_start = 0
 
@@ -20,8 +20,8 @@ patroller_probability_vector = [0.7]
 
 showLegend = False
 ##############  CALCULATED INPUT  ##############
-pSchedule = np.array([[0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0]])
-target = [0, 0.7]
+pSchedule = np.array([[0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0,  0.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.5, 0.6, 0.7, 1.0]])
+target = [0, 0.43]
 ################################################
 
 
@@ -49,22 +49,31 @@ class game_simulator(object):
 		trips = self.no_of_trips_vector
 
 		for fIndex,fItem in enumerate(schedule):
-				for tIndex, tItem in enumerate(fItem):
-					position = (vmax[fIndex] * ((timeStep * tIndex) + startTime[fIndex]))
-					rangeStart = game_utility.findRangeStart(position, dst)
-					if(int(rangeStart/dst) >= trips[fIndex] + 1 and False):        ######################## TODO : Number  of trips
-						position = 0
-					else:
-						if(position > dst and (rangeStart/dst)%2 != 0):
-							# RETURNING FERRY
-							position = dst - (position - rangeStart)
-							print("return", position)
-						elif (position > dst and (rangeStart/dst)%2 == 0):
-							# MOVING FORWARD FERRY
-							position = position - rangeStart;
-							print("forward", position)
-					print(format(max(game_utility.normalize(position, dst), 0.0), '.2f'))
-					schedule[fIndex][tIndex] = format(max(game_utility.normalize(position, dst), 0.0), '.2f')
+			forwardDirection = True
+			tripNo = 0
+			for tIndex, tItem in enumerate(fItem):
+				position = (vmax[fIndex] * ((timeStep * tIndex) + startTime[fIndex]))
+				rangeStart = game_utility.findRangeStart(position, dst)
+				if(position > dst and (rangeStart/dst)%2 != 0):
+					# RETURNING FERRY
+					position = dst - (position - rangeStart)
+					if(forwardDirection):
+						tripNo = tripNo + 1
+						forwardDirection = False
+					#print("return", position)
+				elif (position > dst and (rangeStart/dst)%2 == 0):
+					# MOVING FORWARD FERRY
+					position = position - rangeStart;
+					#print("forward", position)
+					if(not forwardDirection):
+						tripNo = tripNo + 1
+						forwardDirection = True
+				#print(format(max(game_utility.normalize(position, dst), 0.0), '.2f'))
+				#print(rangeStart)
+				if(tripNo > trips[fIndex] + 1):        ######################## TODO : Number  of trips
+					position = 0
+				schedule[fIndex][tIndex] = format(max(game_utility.normalize(position, dst), 0.0), '.2f')
+				#print(fIndex, tripNo, trips[fIndex], position)
 
 		return schedule
 	
@@ -109,30 +118,31 @@ class game_simulator(object):
 		print("Total time: %s hrs" % format(max(finishTime), '.2f'))
 
 		schedule = self.getLinearSchedule(schedule, timeStep, startTime, dst)		
-		return schedule;
+		return schedule, timeStep;
 
 	def runGame(self, fSchedule, pSchedule, target):
 		activePatrollers = []
 		render = self.render
 		unsuccessfulProbability = 0
-		attackTimeStmp = game_utility.denormalize(target[1], self.no_of_discrete_time_intervals)
-		targetPosition = fSchedule[target[0]][game_utility.denormalize(target[1], self.no_of_discrete_time_intervals)]
+		attackTimeStmp = game_utility.denormalize(target[1], self.no_of_discrete_time_intervals-1)
+		attackTime = int(attackTimeStmp)
+		targetPosition = fSchedule[target[0]][attackTime]
 		
 		for pIndex, pItem in enumerate(pSchedule):
-			patroller_ferry_dist = abs(pSchedule[pIndex][attackTimeStmp] - targetPosition)
+			patroller_ferry_dist = abs(pSchedule[pIndex][attackTime] - targetPosition)
 			if (patroller_ferry_dist <= self.p_radius):
 				print("dist: ", patroller_ferry_dist)
 				print("radius: ", p_radius)
-				print("Patroller position: %f" %  pSchedule[pIndex][attackTimeStmp])
+				print("Patroller position: %f" %  pSchedule[pIndex][attackTime])
 				print("Target position: %f" % targetPosition)
 				unsuccessfulProbability = unsuccessfulProbability + self.patroller_probability_vector[pIndex]
 				activePatrollers.append(pIndex)
 
-		print(target[1], attackTimeStmp)
+		print(target[1], attackTime)
 		if(unsuccessfulProbability > 0):
-			return (+1, -1), unsuccessfulProbability, activePatrollers, attackTimeStmp
+			return (+1, -1), unsuccessfulProbability, activePatrollers, attackTimeStmp, targetPosition
 		else:
-			return (-1, +1),0, [], attackTimeStmp
+			return (-1, +1),0, [], attackTimeStmp, targetPosition
 
 
 
@@ -146,18 +156,18 @@ print("\n--------------  Simulation Results  ----------------")
 simulator = game_simulator(no_of_ferries,no_of_discrete_time_intervals,maximam_velocity_vector, port_coordinates_vector,no_of_trips_vector, 
 	halt_time_at_port,buffer_before_start, render, p_radius, no_of_patrollers, patroller_probability_vector)
 
-fSchedule = simulator.getFerrySchedule()
+fSchedule, timeStep = simulator.getFerrySchedule()
 print("Ferry schedule: ")
 print('\n'.join(['\t'.join(['{:4}'.format(item) for item in row]) for row in fSchedule]))
 
 print("\nTarget: ")
 print(','.join(['{:4}'.format(item) for item in target]))
 
-reward, prob, activePatrollers, attackTimeStmp = simulator.runGame(fSchedule, pSchedule, target)
+reward, prob, activePatrollers, attackTimeStmp, targetPosition = simulator.runGame(fSchedule, pSchedule, target)
 print("Reward: %s" % format(reward))
 print("Unsuccessful probability: %s" % format(prob))
 print("Active Patrollers: %s" % format(activePatrollers))
 
-game_utility.renderSimulation(8, no_of_discrete_time_intervals, fSchedule, pSchedule, target, simulator.dst, activePatrollers, showLegend, attackTimeStmp)
+game_utility.renderSimulation(8, no_of_discrete_time_intervals, fSchedule, pSchedule, target, simulator.dst, activePatrollers, showLegend, attackTimeStmp, targetPosition)
 
 	
